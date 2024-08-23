@@ -6,8 +6,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.charset.Charset;
-import java.util.Iterator;
-import java.util.List;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 import org.apache.commons.io.IOUtils;
 import org.json.JSONException;
@@ -17,7 +18,7 @@ import org.json.JSONObject;
 //TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 public class Main {
-    public static void main(String[] args) throws IOException, JSONException {
+    public static void main(String[] args) throws IOException, JSONException, ParseException {
 //TIP Press <shortcut actionId="ShowIntentionActions"/> with your caret at the highlighted text
 // to see how IntelliJ IDEA suggests fixing it.
         URL url = new URL("http://127.0.0.1:5000/stockData");
@@ -30,16 +31,33 @@ public class Main {
 
         JSONObject j = getJson(url).getJSONObject("Time Series (Daily)");
 
-        List<Integer> l1 = new java.util.ArrayList<>();
+        List<Float> highs = new java.util.ArrayList<>();
+
+        TreeMap<Date, Float> m = new TreeMap<>();
 
         Iterator keys = j.keys();
         while (keys.hasNext()) {
             Object key = keys.next();
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+//
+            Date date = dateFormat.parse(key.toString());
             JSONObject value = j.getJSONObject((String) key);
-            l1.add( value.getInt("2. high"));
+            highs.add(Float.parseFloat(value.getString("2. high")));
+            m.put(date, Float.parseFloat(value.getString("2. high")));
+
         }
 
-        System.out.println(l1.stream().sorted().map(i -> i));
+        Collections.max(m.entrySet(), Map.Entry.comparingByValue()).getKey();
+
+        Float hi = Float.MIN_VALUE;
+        Float lo = Float.MAX_VALUE;
+
+        for(Float val : m.values() ){
+            hi = Float.max(val, hi);
+            lo = Float.min(val, lo);
+        }
+
+        System.out.println(lo);
 
 
     }
